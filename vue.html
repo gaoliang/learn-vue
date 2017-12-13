@@ -1,0 +1,191 @@
+vue
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+
+模板语法
+    <span>{{message}}</span>
+    <span v-once>{{message}}</span>
+    <span v-html="message"></span>
+    <div v-bind:id="dynamicId"></div>
+    <div v-bind:disabled="isButtonDisabled"></div>
+
+    <span>{{number + 1}}</span>
+    <span>{{ ok? 'YES' : 'NO' }}</span>
+    <span>{{message.split().reverser().join('')}}</span>
+    
+    <p v-if="seen">现在你可以看得到我</p>
+    <p v-bind:href="url"></p>
+    <a v-on:click="doSomething"></a>
+    <!-- 修饰符. -->
+    <form v-on:submit.prevent="onSubmit"></form>    
+    <!-- 这里的.prevent 代表对于触发的事件调用 event.preventDefault() -->
+
+
+    <!-- v-bind 和 v-on -->
+    <!-- 可以缩写为 : 和 @ -->
+
+计算属性
+
+    <div id="example">
+        {{ message.split().reverse().join('') }}
+    </div>
+
+    对于复杂的处理不应该在模板中进行处理，而是应该使用计算属性
+
+    <div id="example">
+        <p>origin message : "{{ message }}"</p>
+        <p>computed message : "{{ reversedMessge }}"</p>
+        <p>funticon computed message : "{{ computedMessage() }}"</p>
+        {{fullName}}
+
+        <!-- 动态修改class，class的有无根据对应的value是否truthiness判定 -->
+        <div v-bind:class="{ active:isActive,'text-danger':hasError}"></div>
+        <!-- 另外一种动态修改class的方法，可以不用内联的写在html中。 -->
+        <div v-bind:class="classObject"></div>
+        <!-- 这里的classObject可以是data，也可以是computed_data -->
+        <div v-bind:class="[activeClass,errorClass]"></div>
+        <!-- 这里的数组语法，可以把对应data的数值作为class列表的值 -->
+        <div v-bind:class="[isActive ? activeClass:'',errorClass]"></div>
+        <div v-bind:class="[{active:isActive},errorClass]"></div>
+    </div>
+    <script>
+        
+    var vm = new Vue({
+        el : '#example',
+        data : {
+            message : 'hello',
+            isActive:true,
+            hasError:false,
+            classObject:{
+                active:true,
+                'text-danger':false,
+            }
+        },
+
+        // 采用计算属性和方法的区别是计算属性会基于依赖进行缓存，只有当依赖发生变化时，才会进行更新
+
+        computed: {
+            reversedMessage: function () {
+                return this.message.split('').reverse().join('')
+            },
+            now: function () {
+                return Date.now()
+                // 方法将会失效，因为这个方法没有依赖，也就不会进行更新
+            },
+            classObject: {
+                active :this.isActive && !this.error,
+                'text-danger': this.error && this.error.type === "fatal"
+            }
+        },
+        methods: {
+            reversedMessage: function () {
+                return this.message.split('').reverse().join('')
+            },
+            now: function () {
+                return Date.now()
+                // 方法成功，因为使用方法不会有缓存。
+            }
+        },
+        watch:{
+            firstName: function (val) {
+                this.fullName = val + ' '  
+            }
+        }
+        
+    })
+    </script>
+
+
+绑定内联的样式
+    <!-- 常规语法 -->
+    <div id="test" v-bind:style="{color:activeColor,fontSize:fontSize+'px'}">
+        <!-- 样式对象语法 -->
+        <div v-bind:style="styleObject"></div>
+        <!-- 数组语法，可以将多个样式绑定到一个对象上 -->
+        <div v-bind:style="[baseStyles,overridingStyles]"></div>
+
+        <!-- vue使用需要添加浏览器引擎前缀的css属性时，会自动添加相应的前缀 -->
+    </div>
+    <script>
+        var vm = new Vue({
+            el:'#test',
+            data:{
+                styleObject:{
+                    color:'red',
+                    fontSize:'13px'
+                }
+            }
+        })
+    </script>
+
+条件渲染
+
+    <h1 v-if="ok">this is ok</h1>
+    <h1 v-else-if="fine">this is fine</h1>
+    <!-- else必须紧跟这ok元素，否则失效 -->
+    <h1 v-else>this is not ok</h1>
+
+    <!-- 如果需要一次条件多个元素,可以使用template元素，这个元素实际上是个空元素，渲染后会小时 -->
+    <template v-if="ok">
+        <ol>
+            <li>this</li>
+            <li>is</li>
+            <li>ok</li>
+        </ol>
+    </template>
+
+
+    <!-- vue会尽可能的重用已有的元素，这可能导致一些元素的信息残留，这是可以使用key来区分不同的元素，强制重新渲染元素而不是重用元素 -->
+    <template v-if="loginType === 'username'">
+        <label>username</label>
+        <input placeholder="enter your username" key="username-input">
+    </template>
+    <template v-else>
+        <label>email</label>
+        <input placeholder="enter your email" key="email-input">
+    </template>
+
+    <!-- v-show 仅仅修改display属性，但是非惰性，v-if是惰性的，只有在第一次为真的时候才会开始渲染，切换开销也较大 -->
+
+列表渲染
+    <ul id="example-1">
+        <!-- 简单的for列表渲染 -->
+        <li v-for="item in items">
+            {{item.message}}
+        </li>
+        <!-- 带索引的v-for,且对父作用域有完全的访问权限 -->
+        <li v-for="(item,index) in items">
+            {{parentMessage}} - {{index}} - {{item.message}}
+        </li>
+
+        <!-- 迭代对象 -->
+        <li v-for="value in object"></li>
+        <li v-for="(value,key) in object"></li>
+        <li v-for="(value,key,index) in object"></li>
+
+        <!-- 利用key防止元素重用导致的状态残留 -->
+        <div v-for="item in items" :key="item.id"></div>
+    
+        <!-- 进行十次重复渲染 -->
+        <template v-for="n in 10"></template>
+    </ul>
+
+    <!-- 也可以用of来迭代 -->
+    <!-- v-for的迭代内容可以是一个计算属性或方法 -->
+    <script>
+    var example1 = new Vue({
+        el:'#example',
+        data:{
+            parentMessage:'Parent',
+            items:[
+                {message:'foo'},
+                {message:'bar'}
+            ],
+            object:{
+                firstName:'John',
+                lastName:'Doe',
+                'age':30
+            }
+        }
+    })
+    
+</script>
