@@ -162,12 +162,17 @@ vue
         <li v-for="(value,key) in object"></li>
         <li v-for="(value,key,index) in object"></li>
 
+        <!-- v-for的优先级高于v-if,所以可以再v-if中引用v-for中的迭代临时变量来做筛选 -->
+        <li v-for="todo in todos" v-if="!todo.idComplete">{{todo}}</li>
+
         <!-- 利用key防止元素重用导致的状态残留 -->
         <div v-for="item in items" :key="item.id"></div>
     
         <!-- 进行十次重复渲染 -->
         <template v-for="n in 10"></template>
     </ul>
+
+
 
     <!-- 也可以用of来迭代 -->
     <!-- v-for的迭代内容可以是一个计算属性或方法 -->
@@ -188,4 +193,314 @@ vue
         }
     })
     
-</script>
+    </script>
+
+事件处理
+
+    <div id="test">
+        <button v-on:click="counter += 1">Add 1</button>
+        <button v-on:click="greet"></button>
+        <button v-on:click="say('hello')"></button>
+        <!-- 捕获原生dom事件使用 $event -->
+        <button v-on:click="say('hello',$event)"></button>        
+        <p>added {{counter}} times</p>
+    </div>
+
+    <script>
+        var vm = new Vue({
+            el:"#test",
+            data:{
+                counter:0
+            },
+            methods:{
+                greee:function (event) {
+                    alert("hello" + this.name + '!')
+                    if(event){
+                        alert(event.target.tagName)
+                    }
+                },
+                say:function (message,event){
+                    if(event) event.preventDefault();
+                    alert(message)
+                }
+            }
+        })
+    </script>
+
+    <!-- 事件修饰符 -->
+    <!-- 修饰符可以串联 -->
+    .stop .prevent .capture .self .once
+
+    .capture
+    <!-- 内部元素触发的事件先在此处处理，然后才交由内部元素自身进行处理 -->
+    
+    .self
+    <!-- 仅在event.target 是元素自身时触发处理函数，即事件不是内部元素触发的 -->
+
+    .stop
+    <!-- 阻止继续传播 -->
+
+    .prevent
+    <!-- 提交时间不再重载页面 -->
+
+    .once
+    <!-- 只会触发一次的事件，仅在第一次发生时触发 -->
+
+    <input type="text"  v-on:keyup.13+"submit">
+    <!-- 监听键盘事件 -->
+
+    <!-- 常见的别名 -->
+    <input type="text" v-on:keyup.enter="submit">
+    <input type="text" @keyup.enter="submit">
+
+    enter,tab,delete,esc,space,up,down,left,right
+
+
+表单输入绑定
+
+    <input type="text" v-model="message">
+    <p>Message is:{{message}}</p>
+
+    <input type="checkbox" v-model="checkd">
+    <label for="" >{{checked}}</label>
+
+
+    <!-- 多个复选框可以绑定到一个数组 -->
+    <div id="example">
+        <input type="text" id='jack' value="jack" v-model="checkNames">
+        <input type="text" id='jack' value="jack" v-model="checkNames">
+        <input type="text" id='jack' value="jack" v-model="checkNames">
+        <span>checked names {{checkedNames}}</span>
+    </div>
+
+    <script>
+        new Vue({
+            el:'#example',
+            data:{
+                checkedNames:[]
+            }
+        })
+    </script>
+
+    <!-- 单选按钮 选择框类似 -->
+
+    <div id="example">
+            <label for="">One</label>
+            <input type="radio" id='one' value="One" v-model="picked">
+            <span>picked names {{picked}}</span>
+    </div>
+    
+        <script>
+            new Vue({
+                el:'#example',
+                data:{
+                    picked:''
+                }
+            })
+        </script>
+
+    <!-- 选择框，多选时绑定到一个素组 -->
+
+    <div id="example">
+        <select v-model="selected">
+            <option value="" disabled>请选择</option>
+            <option >A</option>
+            <option >B</option>
+        </select>
+    </div>
+    
+        <script>
+            new Vue({
+                el:'#example',
+                data:{
+                    selected:''
+                }
+            })
+        </script>
+
+    <!-- 输入绑定的修饰符 -->
+
+    .lazy, .number, .trim,
+    .lazy
+    <!-- 在change发生时才触发，而不是input发生时触发 -->
+
+    .number
+    <!-- 自动转换为数值类型 -->
+
+    .trim
+    <!-- 自动去除首尾的空白字符串 -->
+
+
+
+组件
+    <!-- 扩展html元素，封装可以重用的代码 （自定义html元素） -->
+    <!-- 所有的vue组件同时也是Vue实例 -->
+
+    <!-- 全局注册 -->
+    <div id="example">
+            <my-cpmponent></my-cpmponent>
+    </div>
+    <script>
+        // 注册全局组件
+        Vue.component('my-component',{
+            // 选项
+            template : '<div>A custom component{{message}}</div>',
+            data:function () {
+                return {
+                    message : "this is a message"
+                }
+            }
+        })
+        
+
+        var Child = {
+            template : "<div>A custom component</div>"
+        }
+        // 创建根实例
+        new Vue({
+            el:'#example',
+            // 选项
+            components: {
+                // 局部组件
+                'my-component' : Child
+            }
+        })
+        
+    </script>
+
+组件的组合
+
+    <!-- camelCase 需要转换为. kebab-case -->
+    <child my-message="hello"></child>
+    <child v-bind:my-message="this is another message"></child>
+
+    <script>
+    Vue.component('child',{
+        // 声明props
+        // props: ['myMessage'],
+        props:{
+            propA:Number, // 类型验证
+            propB: [String,Number], // 多类型验证
+            propC: {  // 必传且为字符串
+                type: String,
+                required:true
+            },
+            propD: { // 数字且带有默认值
+                type:Number,
+                default: 100,
+            },
+            propE: { // 数组，对象的默认值应该由一个工厂函数返回
+                type: Object,
+                default : function () {
+                    return {message:'hello'}
+                }
+            },
+            propF: { // 对数据进行自定义验证
+                validator : function (value) {
+                    return value > 10
+                }
+            }
+        },
+        // 与data类似，prop也可以在模板中使用
+        template: '<span>{{ myMessage }}</span>'
+    })
+
+    // 对于模板中的class 和style，父组件传递给子组件的class和style不会覆盖，而是会合并
+    </script>
+
+    <!-- 组件的自定义事件（用于子组件向父组件通信） -->
+    <!-- 每个vue实例实现了事件接口 -->
+    <!-- $on(eventName) 监听事件 -->
+    <!-- $emit(eventName) 触发事件 -->
+
+    <div id="counter-event-example">
+        <p>{{total}}</p>
+        <button-counter v-on:increment="incrementTotal"></button-counter>
+        <button-counter v-on:increment="incrementTotal"></button-counter>
+    </div>
+
+    <script>
+        Vue.component('button-counter',{
+            template : '<button v-on:click="incrementCounter">{{counter}}</button>',
+            data:function () {
+                return {
+                    counter : 0
+                }
+            },
+            methods : {
+                incrementCounter : function() {
+                    this.counter +=1 
+                    // 与外部组件解耦合
+                    this.$emit('increment')
+                }
+            }
+        })
+
+        new Vue({
+            el:'#counter-evnet-example',
+            data:{
+                total:0
+            },
+            method:{
+                incrementTotal: function () {
+                    this.total += 1
+                }
+            }
+        })
+    </script>
+
+
+
+    <!-- 自定义组件的v-model -->
+
+    <script>
+        Vue.component('my-checkbox',{
+            model:{
+                prop:'checked',
+                event:'change'
+            },
+            props : {
+                checked :Boolean,
+                value:String,
+            }
+
+        })
+    </script>
+
+
+    <!-- 非父子组件间的通信 -->
+    <script>
+    // 需要一个空的Vue实例作为事件总线
+    var bus = new Vue()
+    // 触发上组建A中的事件
+    bus.$emit('id-selected',1)
+    
+    // 在组件B中创建的钩子中监听事件
+    bus.$on('id-selected',function(id){
+
+    })
+    </script>
+
+
+    <!-- 动态组件 -->
+    可以使用is特性来动态修改组件，使用keep-alive可以保留状态避免被重新渲染
+    <keep-alive>         
+    <component v-bind:is="currentView"></component>   
+    </keep-alive>            
+            
+    <script>
+
+        var archive = {
+            template : '<p>welcome<p>'
+        }
+        var vm = new Vue({
+            data:{
+                currentView: 'home'
+            },
+            components:{
+                home : { /* ... */},
+                posts : {/* ... */},
+                archive : archive
+            }
+        })
+    </script>
